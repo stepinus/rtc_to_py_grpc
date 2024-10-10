@@ -1,93 +1,49 @@
 import asyncio
-import logging
-import math
-import numpy as np
-from aiohttp import web
-from aiortc import RTCPeerConnection, RTCSessionDescription, MediaStreamTrack
-from aiortc.contrib.media import MediaBlackhole
-import aiohttp_cors
 import json
+from aiohttp import web
+from aiortc import RTCPeerConnection, RTCSessionDescription
 
-logging.basicConfig(level=logging.INFO)
-
-class AudioLevelTrack(MediaStreamTrack):
-    kind = "audio"
-
-    def __init__(self, track):
-        super().__init__()
-        self.track = track
-        self.last_log = 0
-
-    async def recv(self):
-        frame = await self.track.recv()
-        
-        # Calculate audio level
-        if frame and frame.format.name == 's16':
-            samples = frame.to_ndarray()
-            if samples.size > 0:
-                rms = math.sqrt(np.mean(samples**2))
-                db = 20 * math.log10(rms / 32768) if rms > 0 else -100
-                
-                current_time = asyncio.get_event_loop().time()
-                if current_time - self.last_log > 1:  # Log every second
-                    logging.info(f"Audio level: {db:.2f} dB")
-                    self.last_log = current_time
-            else:
-                logging.warning("Received empty audio frame")
-        else:
-            logging.warning(f"Unexpected frame format: {frame.format.name if frame else 'None'}")
-        
-        return frame
-
-async def index(request):
-    return web.Response(content_type='text/html', text='WebRTC Server is running.', headers={'Access-Control-Allow-Origin': '*'})
-
-async def offer(request):
-    params = await request.json()
-    offer = RTCSessionDescription(sdp=params['sdp'], type=params['type'])
+async def websocket_handler(request):
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
 
     pc = RTCPeerConnection()
-    recorder = MediaBlackhole()
 
-    @pc.on("track")
-    def on_track(track):
-        logging.info("Track %s received", track.kind)
-        if track.kind == "audio":
-            audio_level_track = AudioLevelTrack(track)
-            pc.addTrack(audio_level_track)
-            recorder.addTrack(audio_level_track)
+    @pc.on("datachannel")
+    def on_datachannel(channel):
+        
+        @channel.on("message")
+        def on_message(message):
+            print(f"Received message from data channel: {message}")
 
-    @pc.on('iceconnectionstatechange')
-    async def on_iceconnectionstatechange():
-        logging.info('ICE connection state is %s', pc.iceConnectionState)
-        if pc.iceConnectionState == 'failed':
-            await pc.close()
-        elif pc.iceConnectionState == 'connected':
-            await recorder.start()
+    async for msg in ws:
+        if msg.type == web.WSMsgType.TEXT:
+            if msg.data:
+                print(f"Received message from client: {msg.data}")
+                # data = json.loads(msg.data)
+                # if data['type'] == 'offer':
+                #     print(f"Received offer from client: {data['sdp']}")
+                #     offer = RTCSessionDescription(sdp=data['sdp'], type=data['type'])
+                #     await pc.setRemoteDescription(offer)
+                #     answer = await pc.createAnswer()
+                #     await pc.setLocalDescription(answer)
+                #     await ws.send_json({
+                #         'type': 'answer',
+                #         'sdp': pc.localDescription.sdp
+                #     })
+                # elif data['type'] == 'ice_candidate':
+                #     candidate = data['candidate']
+                #     await pc.addIceCandidate(candidate)
+        elif msg.type == web.WSMsgType.ERROR:
+            print(f"WebSocket connection closed with exception {ws.exception()}")
 
-    await pc.setRemoteDescription(offer)
-    answer = await pc.createAnswer()
-    await pc.setLocalDescription(answer)
+    await pc.close()
+    return ws
 
-    return web.json_response({
-        'sdp': answer.sdp,
-        'type': answer.type
-    }, headers={'Access-Control-Allow-Origin': '*'})
-
-app = web.Application()
-app.router.add_get('/', index)
-app.router.add_post('/offer', offer)
-
-# Configure CORS
-cors = aiohttp_cors.setup(app)
-for route in list(app.router.routes()):
-    cors.add(route, {
-        "*": aiohttp_cors.ResourceOptions(
-            allow_credentials=True,
-            expose_headers="*",
-            allow_headers="*",
-        )
-    })
+async def main():
+    app = web.Application()
+    app.router.add_get('/websocket', websocket_handler)
+    return app
 
 if __name__ == '__main__':
-    web.run_app(app, port=8080)
+    web.run_app(main(), host='localhost', port=8080)
