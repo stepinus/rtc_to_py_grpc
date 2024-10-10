@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from server import data_pb2 as server_dot_data__pb2
+import data_pb2 as data__pb2
 
 GRPC_GENERATED_VERSION = '1.66.2'
 GRPC_VERSION = grpc.__version__
@@ -18,7 +18,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in server/data_pb2_grpc.py depends on'
+        + f' but the generated code in data_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -36,8 +36,8 @@ class DataServiceStub(object):
         """
         self.SendData = channel.unary_unary(
                 '/dataservice.DataService/SendData',
-                request_serializer=server_dot_data__pb2.DataRequest.SerializeToString,
-                response_deserializer=server_dot_data__pb2.DataResponse.FromString,
+                request_serializer=data__pb2.DataRequest.SerializeToString,
+                response_deserializer=data__pb2.DataResponse.FromString,
                 _registered_method=True)
 
 
@@ -55,8 +55,8 @@ def add_DataServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SendData': grpc.unary_unary_rpc_method_handler(
                     servicer.SendData,
-                    request_deserializer=server_dot_data__pb2.DataRequest.FromString,
-                    response_serializer=server_dot_data__pb2.DataResponse.SerializeToString,
+                    request_deserializer=data__pb2.DataRequest.FromString,
+                    response_serializer=data__pb2.DataResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -84,8 +84,8 @@ class DataService(object):
             request,
             target,
             '/dataservice.DataService/SendData',
-            server_dot_data__pb2.DataRequest.SerializeToString,
-            server_dot_data__pb2.DataResponse.FromString,
+            data__pb2.DataRequest.SerializeToString,
+            data__pb2.DataResponse.FromString,
             options,
             channel_credentials,
             insecure,

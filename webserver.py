@@ -6,7 +6,7 @@ from aiortc.contrib.media import MediaRelay
 import grpc
 import data_pb2
 import data_pb2_grpc
-
+from aiohttp_cors import setup as cors_setup, ResourceOptions
 relay = MediaRelay()
 
 async def index(request):
@@ -14,6 +14,7 @@ async def index(request):
     return web.Response(content_type="text/html", text=content)
 
 async def offer(request):
+    
     params = await request.json()
     offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
 
@@ -52,6 +53,19 @@ async def on_shutdown(app):
 if __name__ == "__main__":
     app = web.Application()
     app.on_shutdown.append(on_shutdown)
-    app.router.add_get("/", index)
-    app.router.add_post("/offer", offer)
+    
+    # Настройка CORS
+    cors = cors_setup(app, defaults={
+        "*": ResourceOptions(
+            allow_credentials=True,
+            expose_headers="*",
+            allow_headers="*",
+            allow_methods="*"
+        )
+    })
+    
+    # Добавление маршрутов с поддержкой CORS
+    cors.add(app.router.add_get("/", index))
+    cors.add(app.router.add_post("/offer", offer))
+    
     web.run_app(app, host="0.0.0.0", port=8080)
