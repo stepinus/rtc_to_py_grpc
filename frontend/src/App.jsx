@@ -1,79 +1,64 @@
 import { useState } from 'react';
 import useAudioRecorder from './modules/audioRecorder';
-import useAnimation from './modules/animation';
+import AnimationVoice from './modules/AnimationVoice';
+import useWebRTC from './modules/useWebRTC';
 
 function App() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [stream, setStream] = useState(null);
   const [audioContext, setAudioContext] = useState(null);
+  const [analyser, setAudioAnalyser] = useState(null);
 
   const { startRecording, stopRecording, createAudioContext } = useAudioRecorder();
-  const { createAnimation } = useAnimation();
 
-  const startStreaming = async () => {
+  const { connect, isConnected, isLoading, close } = useWebRTC({ offerURL: 'http://0.0.0.0:8080/offer', iceURL: 'http://0.0.0.0:8080/ice-candidate' });
+
+  const handleStart = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     setStream(stream);
     setIsStreaming(true);
 
     const { context, analyser } = await createAudioContext(stream);
     setAudioContext(context);
+    setAudioAnalyser(analyser);
 
     await startRecording();
-    createAnimation(analyser);
 
-    const pc = new RTCPeerConnection();
-  
-    // Add audio track to the peer connection
-    stream.getAudioTracks().forEach(track => {
-      pc.addTrack(track, stream);
-    });
-
-    pc.onicecandidate = event => {
-      if (event.candidate) {
-        // Send the ICE candidate to the server
-        fetch('http://0.0.0.0:8080/ice-candidate', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(event.candidate)
-        });
-      }
-    };
-
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-
-    const response = await fetch('http://0.0.0.0:8080/offer', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({sdp: pc.localDescription.sdp, type: pc.localDescription.type})
-    });
-    const answer = await response.json();
-    await pc.setRemoteDescription(answer);
+    connect(stream).then(() => console.log('Connected to WebRTC peer')).catch((e) => console.error('Error connecting to WebRTC peer:', e));
   };
 
-  const stopStreaming = async () => {
+  const handleClose = () => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
       setIsStreaming(false);
     }
     if (audioContext) {
-      await stopRecording();
+      stopRecording();
       setAudioContext(null);
     }
+    close();
   };
 
   return (
     <>
+    <AnimationVoice isConnected={isConnected} analyser={analyser || null} />
       <h1>webRTC + React</h1>
       <div className="card">
-        <button onClick={startStreaming} disabled={isStreaming}>
+        <button onClick={handleStart} disabled={isStreaming}>
           Старт
         </button>
-        <button onClick={stopStreaming} disabled={!isStreaming}>
+        <button onClick={handleClose} disabled={!isStreaming || !isConnected}>
           Стоп
         </button>
         <canvas id="canvas" width="400" height="200"></canvas>
+        {isLoading ? (
+          <p>Подключение...</p>
+        ) : isConnected ? (
+          <p>Подключено к WebRTC peer</p>
+        ) : (
+          <p></p>
+        )}
       </div>
     </>
   );
