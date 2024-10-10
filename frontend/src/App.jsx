@@ -22,10 +22,22 @@ function App() {
     createAnimation(analyser);
 
     const pc = new RTCPeerConnection();
-    const dc = pc.createDataChannel('chat');
+  
+    // Add audio track to the peer connection
+    stream.getAudioTracks().forEach(track => {
+      pc.addTrack(track, stream);
+    });
 
-    dc.onmessage = e => console.log('Received:', e.data);
-    dc.onopen = () => console.log('Connection opened');
+    pc.onicecandidate = event => {
+      if (event.candidate) {
+        // Send the ICE candidate to the server
+        fetch('http://0.0.0.0:8080/ice-candidate', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(event.candidate)
+        });
+      }
+    };
 
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
@@ -37,10 +49,6 @@ function App() {
     });
     const answer = await response.json();
     await pc.setRemoteDescription(answer);
-
-    setInterval(() => {
-      dc.send('Hello from client!');
-    }, 1000);
   };
 
   const stopStreaming = async () => {

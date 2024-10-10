@@ -24,17 +24,21 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ndata.proto\x12\x0b\x64\x61taservice\"\x1b\n\x0b\x44\x61taRequest\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\t\"\x1f\n\x0c\x44\x61taResponse\x12\x0f\n\x07message\x18\x01 \x01(\t2P\n\x0b\x44\x61taService\x12\x41\n\x08SendData\x12\x18.dataservice.DataRequest\x1a\x19.dataservice.DataResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ndata.proto\"\x1b\n\x0b\x44\x61taRequest\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\t\"\x1f\n\x0c\x44\x61taResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\" \n\x10\x41udioDataRequest\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\"$\n\x11\x41udioDataResponse\x12\x0f\n\x07message\x18\x01 \x01(\t2r\n\x0b\x44\x61taService\x12)\n\x08SendData\x12\x0c.DataRequest\x1a\r.DataResponse\"\x00\x12\x38\n\rSendAudioData\x12\x11.AudioDataRequest\x1a\x12.AudioDataResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'data_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_DATAREQUEST']._serialized_start=27
-  _globals['_DATAREQUEST']._serialized_end=54
-  _globals['_DATARESPONSE']._serialized_start=56
-  _globals['_DATARESPONSE']._serialized_end=87
-  _globals['_DATASERVICE']._serialized_start=89
-  _globals['_DATASERVICE']._serialized_end=169
+  _globals['_DATAREQUEST']._serialized_start=14
+  _globals['_DATAREQUEST']._serialized_end=41
+  _globals['_DATARESPONSE']._serialized_start=43
+  _globals['_DATARESPONSE']._serialized_end=74
+  _globals['_AUDIODATAREQUEST']._serialized_start=76
+  _globals['_AUDIODATAREQUEST']._serialized_end=108
+  _globals['_AUDIODATARESPONSE']._serialized_start=110
+  _globals['_AUDIODATARESPONSE']._serialized_end=146
+  _globals['_DATASERVICE']._serialized_start=148
+  _globals['_DATASERVICE']._serialized_end=262
 # @@protoc_insertion_point(module_scope)

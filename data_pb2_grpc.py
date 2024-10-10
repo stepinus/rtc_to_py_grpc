@@ -35,9 +35,14 @@ class DataServiceStub(object):
             channel: A grpc.Channel.
         """
         self.SendData = channel.unary_unary(
-                '/dataservice.DataService/SendData',
+                '/DataService/SendData',
                 request_serializer=data__pb2.DataRequest.SerializeToString,
                 response_deserializer=data__pb2.DataResponse.FromString,
+                _registered_method=True)
+        self.SendAudioData = channel.unary_unary(
+                '/DataService/SendAudioData',
+                request_serializer=data__pb2.AudioDataRequest.SerializeToString,
+                response_deserializer=data__pb2.AudioDataResponse.FromString,
                 _registered_method=True)
 
 
@@ -45,6 +50,12 @@ class DataServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def SendData(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SendAudioData(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -58,11 +69,16 @@ def add_DataServiceServicer_to_server(servicer, server):
                     request_deserializer=data__pb2.DataRequest.FromString,
                     response_serializer=data__pb2.DataResponse.SerializeToString,
             ),
+            'SendAudioData': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendAudioData,
+                    request_deserializer=data__pb2.AudioDataRequest.FromString,
+                    response_serializer=data__pb2.AudioDataResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'dataservice.DataService', rpc_method_handlers)
+            'DataService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('dataservice.DataService', rpc_method_handlers)
+    server.add_registered_method_handlers('DataService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -83,9 +99,36 @@ class DataService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/dataservice.DataService/SendData',
+            '/DataService/SendData',
             data__pb2.DataRequest.SerializeToString,
             data__pb2.DataResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SendAudioData(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/DataService/SendAudioData',
+            data__pb2.AudioDataRequest.SerializeToString,
+            data__pb2.AudioDataResponse.FromString,
             options,
             channel_credentials,
             insecure,

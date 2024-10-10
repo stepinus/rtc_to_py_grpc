@@ -1,9 +1,8 @@
 syntax = "proto3";
 
-package dataservice;
-
 service DataService {
   rpc SendData (DataRequest) returns (DataResponse) {}
+  rpc SendAudioData (AudioDataRequest) returns (AudioDataResponse) {}
 }
 
 message DataRequest {
@@ -11,5 +10,13 @@ message DataRequest {
 }
 
 message DataResponse {
+  string message = 1;
+}
+
+message AudioDataRequest {
+  bytes data = 1;
+}
+
+message AudioDataResponse {
   string message = 1;
 }

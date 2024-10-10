@@ -5,11 +5,14 @@ import time
 
 import data_pb2
 import data_pb2_grpc
+import numpy as np
 
 class DataService(data_pb2_grpc.DataServiceServicer):
-    def SendData(self, request, context):
-        logging.info(f"Received data: {request.data}")
-        return data_pb2.DataResponse(message="Data received successfully")
+    def SendAudioData(self, request, context):
+        audio_data = np.frombuffer(request.data, dtype=np.float32)
+        logging.info(f"Received audio data with shape: {audio_data.shape}")
+        # Здесь вы можете добавить обработку аудиоданных
+        return data_pb2.AudioDataResponse(message="Audio data received successfully")
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
